@@ -1,0 +1,16 @@
+{
+  "name": "bot-login-tool",
+  "version": "0.0.1",
+  "description": "login to a discord bot via a website",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "hi12167pies",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.0.0",
+    "ejs": "^3.1.6",
+    "express": "^4.17.1"
+  }
+}

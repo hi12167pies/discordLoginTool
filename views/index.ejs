@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="./index.css">
+  <title>Bot login</title>
+
+</head>
+<body>
+
+  <div class="container center">
+    <img src="<%= locals.botinfo.avatarURL() || "./deficon.png" %>" width=100 height=100/>
+    
+    <h2>Login into a server</h2>
+    <p>As <%= botinfo.tag %></p>
+    
+    
+    <select id="login-server"></select>
+    
+    <p class=submit id=submit>Login</p>
+  </div>
+  
+  <script>
+    const servers = <%- JSON.stringify(locals.serverList) || [] %>
+    const loginSelect = document.getElementById('login-server')
+    let loginSelectOptions = []
+    servers.forEach(cur => {
+      loginSelectOptions.push(`
+      <option value="${cur.id}">
+        ${cur.name}
+      </option>
+      `)
+    })
+    loginSelect.innerHTML = loginSelectOptions.join('')
+
+    document.getElementById('submit').onclick = () => {
+      location.replace(`/server?id=${loginSelect.value}&scope=home`)
+    }
+  </script>
+</body>
+</html>

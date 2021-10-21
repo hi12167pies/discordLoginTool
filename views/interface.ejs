@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="./interface.css">
+  <script src="https://kit.fontawesome.com/3b7cee7c07.js" crossorigin="anonymous"></script>
+  <title>Logged in as <%= locals.botinfo.tag || "Error" %></title>
+
+  <script>
+    const locals = <%- JSON.stringify(locals) %>
+  </script>
+
+</head>
+
+<body>
+  <header>
+    <div class=notice>
+      <span onclick="location.replace('/')" class=goback>Go back</span> You are logged in as <%= locals.botinfo.tag || "Error" %> on the server <%= locals.guild.name || "Error" %>
+    </div>
+  </header>
+
+  <!-- load channels with javascript -->
+  <div class=sidebar>
+    <div class=info>
+      <h2><%= locals.guild.name || "Error" %></h2>
+      <img width=100 height="100" src="<%= locals.guild.icon || "./deficonserver.png" %>">
+    </div>
+    <hr>
+
+    <div id=channels></div>
+  </div>
+
+  <!-- unhide with javascript -->
+  <div class=messages id=msgs hidden>
+
+    <div id=msgarea>
+      <div class=message>
+        <img src="" width=50 height="50">
+      </div>
+    </div>
+
+    <form autocomplete="off" class=sendform action="/?id=<%= locals.guild.id %>&channel=<%= locals.channel.id %>" method="POST">
+      <input name=message id=send class=send type="text" placeholder="">
+    </form>
+  </div>
+
+  <script>
+    const channels = <%- JSON.stringify(locals.channels) || {"category": [],"text": [],"voice": [],"news": [],"other": []} %>
+    const channel = document.getElementById("channels")
+
+    let channeldata = []
+
+    // NEWS CHANNELS
+    channels.news.forEach(data => {
+      channeldata.push(`
+      <div class="channel"><span onclick="location.replace('/server?id=<%= locals.guild.id %>&scope=home&channel=${data.id}&d=1')"><i class="fas fa-bullhorn"></i> ${data.name}</span></div>
+      `)
+    })
+    channeldata.push("<hr>")
+    // TEXT CHANNELS
+    channels.text.forEach(data => {
+      channeldata.push(`
+      <div onclick="location.replace('/server?id=<%= locals.guild.id %>&scope=home&channel=${data.id}')" class=channel><span><i class="fas fa-hashtag"></i>&nbsp; ${data.name}</span></div>
+      `)
+    })
+    channeldata.push("<hr>")
+    // VOICE CHANNELS
+    channels.voice.forEach(data => {
+      channeldata.push(`
+      <div class="channel-disabled"><span><i class="fas fa-volume-up"></i> ${data.name}</span></div>
+      `)
+    })
+      
+    channel.innerHTML = channeldata.join('')
+  </script>
+
+  <script>
+    let oldinput = []
+    let rounds = 0
+    function startSend(input) { 
+      rounds++
+      if (input != oldinput) {
+        let messages = []
+        let msgda = {}
+
+        let i = 0
+        while (i < input.length) {
+          let cur = input[input.length - (i+1)]
+          messages.push(`<div class=message><img src="" width=50 height="50" class="script" id="msgimg-${i}"><div id="messagebox" class=message1>
+          <span id="msgname-${i}" class="bold script"></span><br>
+          <span id="msgcontent-${i}"  class="script" id=content-${i}></span></div></div>`)
+
+          msgda['a'+i] = { name: cur.name, content: cur.content, img: cur.icon }
+          i++
+        }
+        messages.push('<br><br><br>')
+        
+        if (rounds > 5){
+          msgs.scrollIntoView({ behavior: "smooth", block: "end" })
+        } else {
+          msgs.scrollIntoView({ behavior: "auto", block: "end" })
+        }
+        
+        msgs.innerHTML = messages.join('\n\n')
+
+        document.querySelectorAll('.script').forEach(element => {
+          if (element.id.startsWith('msgname-')) {
+            let data = msgda['a'+element.id.split('msgname-')[1]]
+
+            element.innerText = data.name
+          } else if (element.id.startsWith('msgcontent-')) {
+            let data = msgda['a'+element.id.split('msgcontent-')[1]]
+
+            element.innerText = data.content
+          } else if (element.id.startsWith("msgimg-")) {
+            let data = msgda['a'+element.id.split('msgimg-')[1]]
+
+            if (data.img != null) {
+              element.src = data.img
+            } else {
+              element.src = "./deficon.png"
+            }
+          }
+        })
+
+        olddata = msgda
+      }
+      fetch(`/msgs?id=<%= locals.channel.id %>`)
+      .then(response => response.json())
+      .then(data => startSend(data))
+    }
+  </script>
+
+  <script>
+    const msgbox = document.getElementById("msgs")
+    const message = document.getElementById("send")
+    const msgid = <%- JSON.stringify(locals.channel) %>
+    const msgs = document.getElementById("msgarea")
+
+    if (msgid.id != null) {
+      msgbox.hidden = false
+      message.placeholder = `Send to #${msgid.name}`
+      startSend({})
+    }
+
+    if (locals.disable == '1') message.disabled = 1
+  </script>
+</body>
+
+</html>
